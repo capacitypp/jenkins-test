@@ -17,8 +17,13 @@ int main(int argc, char** argv)
 	string filePath1(argv[1]);
 	string filePath2(argv[2]);
 
-	cout << filePath1 << endl;
-	cout << filePath2 << endl;
+	Mat image1 = imread(filePath1);
+	Mat image2 = imread(filePath2);
+
+	Mat gray_image1, gray_image2;
+	cvtColor(image1, gray_image1, CV_RGB2GRAY);
+	cvtColor(image2, gray_image2, CV_RGB2GRAY);
+
 
 	return 0;
 }
