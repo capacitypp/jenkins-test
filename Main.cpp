@@ -3,6 +3,8 @@
 #include <opencv2/opencv.hpp>
 #include <Eigen/Core>
 
+#include "MatrixUtil.h"
+
 using namespace std;
 using namespace cv;
 using namespace Eigen;
@@ -24,6 +26,8 @@ int main(int argc, char** argv)
 	cvtColor(image1, gray_image1, CV_RGB2GRAY);
 	cvtColor(image2, gray_image2, CV_RGB2GRAY);
 
+	MatrixXd gray1 = MatrixUtil::convertGray2MatrixXd(gray_image1);
+	MatrixXd gray2 = MatrixUtil::convertGray2MatrixXd(gray_image2);
 
 	return 0;
 }
