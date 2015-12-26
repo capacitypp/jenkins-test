@@ -5,6 +5,7 @@
 
 #include "MatrixUtil.h"
 #include "PositionUtil.h"
+#include "MatrixConverter.h"
 
 using namespace std;
 using namespace cv;
@@ -35,6 +36,9 @@ int main(int argc, char** argv)
 
 	cout << "positions1 size : " << positions1.size() << endl;
 	cout << "positions2 size : " << positions2.size() << endl;
+
+	vector<MatrixXd> positionDoubles1 = MatrixConverter::convert2MatrixXd(positions1);
+	vector<MatrixXd> positionDoubles2 = MatrixConverter::convert2MatrixXd(positions2);
 
 	return 0;
 }
