@@ -20,3 +20,14 @@ vector<MatrixXd> MatrixConverter::convert2MatrixXd(const vector<MatrixXi>& src)
 	return dst;
 }
 
+vector<MatrixXi*> MatrixConverter::convert2MatrixPointer(vector<MatrixXi>& src)
+{
+	vector<MatrixXi*> positions;
+	for (unsigned i = 0; i < src.size(); i++) {
+		MatrixXi& position = src[i];
+		positions.push_back(&position);
+	}
+
+	return positions;
+}
+

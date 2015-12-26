@@ -40,6 +40,9 @@ int main(int argc, char** argv)
 	vector<MatrixXd> positionDoubles1 = MatrixConverter::convert2MatrixXd(positions1);
 	vector<MatrixXd> positionDoubles2 = MatrixConverter::convert2MatrixXd(positions2);
 
+	vector<MatrixXi*> positionPtrs1 = MatrixConverter::convert2MatrixPointer(positions1);
+	vector<MatrixXi*> positionPtrs2 = MatrixConverter::convert2MatrixPointer(positions2);
+
 	return 0;
 }
 

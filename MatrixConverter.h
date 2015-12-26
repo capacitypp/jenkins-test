@@ -6,9 +6,10 @@
 #include <Eigen/Core>
 
 class MatrixConverter {
-public:
 	static Eigen::MatrixXd convert2MatrixXd(const Eigen::MatrixXi& src);
+public:
 	static std::vector<Eigen::MatrixXd> convert2MatrixXd(const std::vector<Eigen::MatrixXi>& src);
+	static std::vector<Eigen::MatrixXi*> convert2MatrixPointer(std::vector<Eigen::MatrixXi>& src);
 };
 
 #endif
