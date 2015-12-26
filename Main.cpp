@@ -4,6 +4,7 @@
 #include <Eigen/Core>
 
 #include "MatrixUtil.h"
+#include "PositionUtil.h"
 
 using namespace std;
 using namespace cv;
@@ -18,19 +19,22 @@ int main(int argc, char** argv)
 
 	string imagePath1(argv[1]);
 	string imagePath2(argv[2]);
-
 	Mat image1 = imread(imagePath1);
 	Mat image2 = imread(imagePath2);
 
 	Mat gray_image1, gray_image2;
 	cvtColor(image1, gray_image1, CV_RGB2GRAY);
 	cvtColor(image2, gray_image2, CV_RGB2GRAY);
-
 	MatrixXd gray1 = MatrixUtil::convertGray2MatrixXd(gray_image1);
 	MatrixXd gray2 = MatrixUtil::convertGray2MatrixXd(gray_image2);
 
 	string positionsPath1(argv[3]);
 	string positionsPath2(argv[4]);
+	vector<MatrixXi> positions1 = PositionUtil::readPositions(positionsPath1);
+	vector<MatrixXi> positions2 = PositionUtil::readPositions(positionsPath2);
+
+	cout << "positions1 size : " << positions1.size() << endl;
+	cout << "positions2 size : " << positions2.size() << endl;
 
 	return 0;
 }

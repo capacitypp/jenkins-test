@@ -1,4 +1,4 @@
-OBJS=Main.o MatrixUtil.o
+OBJS=Main.o MatrixUtil.o PositionUtil.o
 INCLUDE=-I./include -I./
 CPPFLAGS=$(INCLUDE)
 LDFLAGS=-L/usr/local/lib
