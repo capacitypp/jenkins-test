@@ -37,11 +37,12 @@ int main(int argc, char** argv)
 	cout << "positions1 size : " << positions1.size() << endl;
 	cout << "positions2 size : " << positions2.size() << endl;
 
-	vector<MatrixXd> positionDoubles1 = MatrixConverter::convert2MatrixXd(positions1);
-	vector<MatrixXd> positionDoubles2 = MatrixConverter::convert2MatrixXd(positions2);
-
 	vector<MatrixXi*> positionPtrs1 = MatrixConverter::convert2MatrixPointer(positions1);
 	vector<MatrixXi*> positionPtrs2 = MatrixConverter::convert2MatrixPointer(positions2);
+
+	vector<MatrixXd> positionDoubles1 = MatrixConverter::convert2MatrixXd(positionPtrs1);
+	vector<MatrixXd> positionDoubles2 = MatrixConverter::convert2MatrixXd(positionPtrs2);
+
 
 	return 0;
 }
