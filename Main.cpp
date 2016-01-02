@@ -7,6 +7,7 @@
 #include "PositionUtil.h"
 #include "MatrixConverter.h"
 #include "RobustImageMatching.h"
+#include "Combination.h"
 
 using namespace std;
 using namespace cv;
@@ -60,9 +61,13 @@ int main(int argc, char** argv)
 	vector<MatrixXd> Tps = RobustImageMatching::computeTs(gray1, positionPtrs1, w);
 	vector<MatrixXd> Tqs = RobustImageMatching::computeTs(gray2, positionPtrs2, w);
 
+	vector<Combination> combinations = Combination::generateCombinations(positionPtrs1.size(), positionPtrs2.size());
+	vector<CombinationPointer> combinationPtrs = CombinationPointer::convert2CombinationPointer(combinations);
+
+	cout << "combinations size : " << combinations.size() << endl;
+
 	vector<MatrixXd> positionDoubles1 = MatrixConverter::convert2MatrixXd(positionPtrs1);
 	vector<MatrixXd> positionDoubles2 = MatrixConverter::convert2MatrixXd(positionPtrs2);
-
 
 	return 0;
 }

@@ -1,4 +1,4 @@
-OBJS=Main.o MatrixUtil.o PositionUtil.o MatrixConverter.o RobustImageMatching.o
+OBJS=Main.o MatrixUtil.o PositionUtil.o MatrixConverter.o RobustImageMatching.o Combination.o
 INCLUDE=-I./include -I./
 CPPFLAGS=$(INCLUDE)
 LDFLAGS=-L/usr/local/lib
