@@ -41,8 +41,18 @@ int main(int argc, char** argv)
 	vector<MatrixXi*> positionPtrs1 = MatrixConverter::convert2MatrixPointer(positions1);
 	vector<MatrixXi*> positionPtrs2 = MatrixConverter::convert2MatrixPointer(positions2);
 
+	cout << "remove duplicate positions" << endl;
 	positionPtrs1 = RobustImageMatching::removeDuplicatePositions(positionPtrs1);
 	positionPtrs2 = RobustImageMatching::removeDuplicatePositions(positionPtrs2);
+
+	cout << "positions1 size : " << positionPtrs1.size() << endl;
+	cout << "positions2 size : " << positionPtrs2.size() << endl;
+
+	int w = 9;
+
+	cout << "remove protruding positions" << endl;
+	positionPtrs1 = RobustImageMatching::removeProtrudingPositions(positionPtrs1, w, gray1.cols(), gray1.rows());
+	positionPtrs2 = RobustImageMatching::removeProtrudingPositions(positionPtrs2, w, gray2.cols(), gray2.rows());
 
 	cout << "positions1 size : " << positionPtrs1.size() << endl;
 	cout << "positions2 size : " << positionPtrs2.size() << endl;
