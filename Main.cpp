@@ -8,6 +8,7 @@
 #include "MatrixConverter.h"
 #include "RobustImageMatching.h"
 #include "Combination.h"
+#include "Timer.h"
 
 using namespace std;
 using namespace cv;
@@ -19,6 +20,8 @@ int main(int argc, char** argv)
 		cerr << argv[0] << " <image path 1> <image path 2> <positions path 1> <positions path 2>" << endl;
 		return 1;
 	}
+
+	Timer timer;
 
 	string imagePath1(argv[1]);
 	string imagePath2(argv[2]);
@@ -70,6 +73,8 @@ int main(int argc, char** argv)
 
 	vector<MatrixXd> positionDoubles1 = MatrixConverter::convert2MatrixXd(positionPtrs1);
 	vector<MatrixXd> positionDoubles2 = MatrixConverter::convert2MatrixXd(positionPtrs2);
+
+	cout << "終了 : " << timer.get() << " sec" << endl;
 
 	return 0;
 }
