@@ -38,6 +38,12 @@ MatrixXd RobustImageMatching::computeT(const MatrixXd& gray, const MatrixXi& pos
 	return T;
 };
 
+double RobustImageMatching::computeJ(const MatrixXd& Tp, const MatrixXd& Tq)
+{
+	double norm = (Tp - Tq).norm();
+	return norm * norm;
+}
+
 vector<MatrixXi*> RobustImageMatching::removeDuplicatePositions(const vector<MatrixXi*>& positionPtrs)
 {
 	vector<MatrixXi*> dst;
@@ -62,5 +68,20 @@ vector<MatrixXd> RobustImageMatching::computeTs(const MatrixXd& gray, const vect
 	for (unsigned i = 0; i < positionPtrs.size(); i++)
 		Ts.push_back(computeT(gray, *positionPtrs[i], w));
 	return Ts;
+}
+
+vector<double> RobustImageMatching::computeJs(const vector<CombinationPointer>& combinationPtrs, const vector<MatrixXd>& Tps, const vector<MatrixXd>& Tqs)
+{
+	vector<double> Js;
+	for (unsigned i = 0; i < combinationPtrs.size(); i++) {
+		const CombinationPointer& combinationPtr = combinationPtrs[i];
+		Combination* ptr = combinationPtr.getPointer();
+		int p = ptr->getP();
+		int q = ptr->getQ();
+		const MatrixXd& Tp = Tps[p];
+		const MatrixXd& Tq = Tqs[q];
+		Js.push_back(computeJ(Tq, Tq));
+	}
+	return Js;
 }
 

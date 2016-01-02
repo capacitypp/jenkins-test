@@ -66,6 +66,8 @@ int main(int argc, char** argv)
 
 	cout << "combinations size : " << combinations.size() << endl;
 
+	vector<double> Js = RobustImageMatching::computeJs(combinationPtrs, Tps, Tqs);
+
 	vector<MatrixXd> positionDoubles1 = MatrixConverter::convert2MatrixXd(positionPtrs1);
 	vector<MatrixXd> positionDoubles2 = MatrixConverter::convert2MatrixXd(positionPtrs2);
 
