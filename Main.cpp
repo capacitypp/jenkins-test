@@ -6,6 +6,7 @@
 #include "MatrixUtil.h"
 #include "PositionUtil.h"
 #include "MatrixConverter.h"
+#include "RobustImageMatching.h"
 
 using namespace std;
 using namespace cv;
@@ -39,6 +40,12 @@ int main(int argc, char** argv)
 
 	vector<MatrixXi*> positionPtrs1 = MatrixConverter::convert2MatrixPointer(positions1);
 	vector<MatrixXi*> positionPtrs2 = MatrixConverter::convert2MatrixPointer(positions2);
+
+	positionPtrs1 = RobustImageMatching::removeDuplicatePositions(positionPtrs1);
+	positionPtrs2 = RobustImageMatching::removeDuplicatePositions(positionPtrs2);
+
+	cout << "positions1 size : " << positionPtrs1.size() << endl;
+	cout << "positions2 size : " << positionPtrs2.size() << endl;
 
 	vector<MatrixXd> positionDoubles1 = MatrixConverter::convert2MatrixXd(positionPtrs1);
 	vector<MatrixXd> positionDoubles2 = MatrixConverter::convert2MatrixXd(positionPtrs2);
