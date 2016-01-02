@@ -31,6 +31,11 @@ bool RobustImageMatching::isProtrudingPosition(const Eigen::MatrixXi& position, 
 	return false;
 }
 
+MatrixXd RobustImageMatching::computeT(const MatrixXd& gray, const MatrixXi& position, int w)
+{
+	return gray.block(position(1, 0) - w /2, position(0, 0) - w / 2, w, w);
+};
+
 vector<MatrixXi*> RobustImageMatching::removeDuplicatePositions(const vector<MatrixXi*>& positionPtrs)
 {
 	vector<MatrixXi*> dst;
@@ -47,5 +52,13 @@ vector<MatrixXi*> RobustImageMatching::removeProtrudingPositions(const vector<Ma
 		if (!isProtrudingPosition(*positionPtrs[i], w, width, height))
 			dst.push_back(positionPtrs[i]);
 	return dst;
+}
+
+vector<MatrixXd> RobustImageMatching::computeTs(const MatrixXd& gray, const vector<MatrixXi*>& positionPtrs, int w)
+{
+	vector<MatrixXd> Ts;
+	for (unsigned i = 0; i < positionPtrs.size(); i++)
+		Ts.push_back(computeT(gray, *positionPtrs[i], w));
+	return Ts;
 }
 

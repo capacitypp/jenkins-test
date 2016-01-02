@@ -57,6 +57,9 @@ int main(int argc, char** argv)
 	cout << "positions1 size : " << positionPtrs1.size() << endl;
 	cout << "positions2 size : " << positionPtrs2.size() << endl;
 
+	vector<MatrixXd> Tps = RobustImageMatching::computeTs(gray1, positionPtrs1, w);
+	vector<MatrixXd> Tqs = RobustImageMatching::computeTs(gray2, positionPtrs2, w);
+
 	vector<MatrixXd> positionDoubles1 = MatrixConverter::convert2MatrixXd(positionPtrs1);
 	vector<MatrixXd> positionDoubles2 = MatrixConverter::convert2MatrixXd(positionPtrs2);
 
