@@ -71,6 +71,8 @@ int main(int argc, char** argv)
 
 	vector<double> Js = RobustImageMatching::computeJs(combinationPtrs, Tps, Tqs);
 
+	RobustImageMatching::setJs(combinationPtrs, Js);
+
 	vector<MatrixXd> positionDoubles1 = MatrixConverter::convert2MatrixXd(positionPtrs1);
 	vector<MatrixXd> positionDoubles2 = MatrixConverter::convert2MatrixXd(positionPtrs2);
 

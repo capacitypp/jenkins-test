@@ -44,6 +44,19 @@ double RobustImageMatching::computeJ(const MatrixXd& Tp, const MatrixXd& Tq)
 	return norm * norm;
 }
 
+bool RobustImageMatching::searchCombination(const std::vector<CombinationPointer>& combinationPtrs, const CombinationPointer& combinationPtr)
+{
+	Combination* _ptr = combinationPtr.getPointer();
+	int p = _ptr->getP();
+	int q = _ptr->getQ();
+	for (unsigned i = 0; i < combinationPtrs.size(); i++) {
+		Combination* ptr = combinationPtrs[i].getPointer();
+		if (ptr->getP() == p || ptr->getQ() == q)
+			return true;
+	}
+	return false;
+}
+
 vector<MatrixXi*> RobustImageMatching::removeDuplicatePositions(const vector<MatrixXi*>& positionPtrs)
 {
 	vector<MatrixXi*> dst;
@@ -83,5 +96,28 @@ vector<double> RobustImageMatching::computeJs(const vector<CombinationPointer>& 
 		Js.push_back(computeJ(Tq, Tq));
 	}
 	return Js;
+}
+
+void RobustImageMatching::setJs(vector<CombinationPointer>& combinationPtrs, const vector<double>& Js)
+{
+	for (unsigned i = 0; i < combinationPtrs.size(); i++) {
+		CombinationPointer& combinationPtr = combinationPtrs[i];
+		double J = Js[i];
+		combinationPtr.getValue() = J;
+	}
+}
+
+vector<CombinationPointer> RobustImageMatching::one2OneReduction(const vector<CombinationPointer>& src)
+{
+	vector<CombinationPointer> combinationPtrs(src);
+	sort(combinationPtrs.begin(), combinationPtrs.end());
+
+	vector<CombinationPointer> dst;
+	for (unsigned i = 0; i < combinationPtrs.size(); i++) {
+		const CombinationPointer& combinationPtr = combinationPtrs[i];
+		if (!searchCombination(dst, combinationPtr))
+			dst.push_back(combinationPtr);
+	}
+	return dst;
 }
 

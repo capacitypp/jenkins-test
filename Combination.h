@@ -27,6 +27,9 @@ private:
 	static CombinationPointer convert2CombinationPointer(Combination& combination);
 public:
 	static std::vector<CombinationPointer> convert2CombinationPointer(std::vector<Combination>& combinations);
+	friend bool operator<(const CombinationPointer& x1, const CombinationPointer& x2) {
+		return x1.value < x2.value;
+	}
 };
 
 #endif
