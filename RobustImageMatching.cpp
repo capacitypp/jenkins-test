@@ -4,9 +4,12 @@
 
 #include "RobustImageMatching.h"
 #include "MatrixUtil.h"
+#include "EigenValue.h"
 
 #define NEWTON_THRESHOLD	1.0e-10
 #define NEWTON_MAXLOOP	1000
+#define RENORMALIZATION_THRESHOLD	1.0e-10
+#define RENORMALIZATION_MAXLOOP	1000
 
 using namespace std;
 using namespace Eigen;
@@ -91,6 +94,131 @@ vector<MatrixXd> RobustImageMatching::computeFlow(const vector<CombinationPointe
 		rs.push_back(positionDouble2 - positionDouble1);
 	}
 	return rs;
+}
+
+MatrixXd RobustImageMatching::computeX(const MatrixXd& positionDouble, double f0)
+{
+	MatrixXd x(3, 1);
+	x(0, 0) = positionDouble(0, 0) / f0;
+	x(1, 0) = positionDouble(1, 0) / f0;
+	x(2, 0) = 1.0;
+	return x;
+}
+
+MatrixXd RobustImageMatching::computeTensorM(const vector<CombinationPointer>& combinationPtrs, const vector<MatrixXd*>& xPtrs1, const vector<MatrixXd*>& xPtrs2, const vector<MatrixXd>& Ws)
+{
+	vector<MatrixXd> es;
+	{
+		MatrixXd e = MatrixXd::Zero(3, 1);
+		e(0, 0) = 1.0;
+		es.push_back(e);
+		e = MatrixXd::Zero(3, 1);
+		e(1, 0) = 1.0;
+		es.push_back(e);
+		e = MatrixXd::Zero(3, 1);
+		e(2, 0) = 1.0;
+		es.push_back(e);
+	}
+	vector<vector<MatrixXd>> exDashxtss;
+	for (unsigned i = 0; i < combinationPtrs.size(); i++) {
+		const CombinationPointer& combinationPtr = combinationPtrs[i];
+		Combination* ptr = combinationPtr.getPointer();
+		const MatrixXd& x1 = *xPtrs1[ptr->getP()];
+		const MatrixXd& x2 = *xPtrs2[ptr->getQ()];
+		MatrixXd xDashxt = x2 * x1.transpose();
+		vector<MatrixXd> exDashxts;
+		for (int j = 0; j < es.size(); j++) {
+			const MatrixXd& e = es[j];
+			MatrixXd exDashxt(3, 3);
+			for (int k = 0; k < 3; k++)
+				exDashxt.col(k) = CROSS_PRODUCT(e, xDashxt.col(k));
+			exDashxts.push_back(exDashxt);
+		}
+		exDashxtss.push_back(exDashxts);
+	}
+	MatrixXd M = MatrixXd::Zero(9, 9);
+	for (unsigned i = 0; i < combinationPtrs.size(); i++) {
+		const MatrixXd& W = Ws[i];
+		const vector<MatrixXd>& exDashxts = exDashxtss[i];
+		for (int k = 0; k < 3; k++) {
+			const MatrixXd& ekxDashxt = exDashxts[k];
+			for (int l = 0; l < 3; l++) {
+				const MatrixXd& elxDashxt = exDashxts[l];
+				M += W(k, l) * tensorProduct(ekxDashxt, elxDashxt);
+			}
+		}
+	}
+	M /= combinationPtrs.size();
+	return M;
+}
+
+MatrixXd RobustImageMatching::tensorProduct(const MatrixXd& a, const MatrixXd& b)
+{
+	MatrixXd c(a.rows() * a.cols(), b.rows() * b.cols());
+	for (int i = 0; i < a.rows(); i++)
+	for (int j = 0; j < a.cols(); j++)
+	for (int k = 0; k < b.rows(); k++)
+	for (int l = 0; l < b.cols(); l++)
+		c(i * a.rows() + j, k * a.cols() + l) = a(i, j) * b(k, l);
+	return c;
+}
+
+MatrixXd RobustImageMatching::computeTensorN(const vector<CombinationPointer>& combinationPtrs, const vector<MatrixXd*>& xPtrs1, const vector<MatrixXd*>& xPtrs2, const vector<MatrixXd>& Ws, const vector<MatrixXd>& V0s)
+{
+	MatrixXd N = MatrixXd::Zero(9, 9);
+	for (int i = 0; i < 3; i++) {
+		for (int j = 0; j < 3; j++) {
+			for (int k = 0; k < 3; k++) {
+				for (int l = 0; l < 3; l++) {
+					for (unsigned alpha = 0; alpha < combinationPtrs.size(); alpha++) {
+						const CombinationPointer& combinationPtr = combinationPtrs[alpha];
+						Combination* ptr = combinationPtr.getPointer();
+						const MatrixXd& x1 = *xPtrs1[ptr->getP()];
+						const MatrixXd& x2 = *xPtrs2[ptr->getQ()];
+						double xj1 = x1(j, 0);
+						double xl1 = x1(l, 0);
+						const MatrixXd& W = Ws[alpha];
+						const MatrixXd& V0 = V0s[alpha];
+						double V0jl = V0(j, l);
+						for (int m = 0; m < 3; m++) {
+							for (int n = 0; n < 3; n++) {
+								double Wmn = W(m, n);
+								for (int p = 0; p < 3; p++) {
+									double imp = epsilon(i, m, p);
+									double xp2 = x2(p, 0);
+									for (int q = 0; q < 3; q++) {
+										double knq = epsilon(k, n, q);
+										double V0pq = V0(p, q);
+										double xq2 = x2(q, 0);
+										N(i * 3 + j, k * 3 + l) += imp * knq * Wmn * (V0jl * xp2 * xq2 + V0pq * xj1 * xl1);
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	N /= combinationPtrs.size();
+	return N;
+}
+
+int RobustImageMatching::epsilon(int i, int j, int k)
+{
+	if (i == 0 && j == 1 && k == 2)
+		return 1;
+	if (i == 1 && j == 2 && k == 0)
+		return 1;
+	if (i == 2 && j == 0 && k == 1)
+		return 1;
+	if (i == 0 && j == 2 && k == 1)
+		return -1;
+	if (i == 2 && j == 1 && k == 0)
+		return -1;
+	if (i == 1 && j == 0 && k == 2)
+		return -1;
+	return 0;
 }
 
 vector<MatrixXi*> RobustImageMatching::removeDuplicatePositions(const vector<MatrixXi*>& positionPtrs)
@@ -266,4 +394,86 @@ vector<CombinationPointer> RobustImageMatching::getSpatialCorrespondence(const v
 	combinationPtrs = takeOutCombinations(combinationPtrs, exp(-2 * k * k / 2));
 	return one2OneReduction(combinationPtrs);
 }
+
+vector<MatrixXd> RobustImageMatching::computeXs(const vector<MatrixXd*>& positionDoublePtrs, double f0)
+{
+	vector<MatrixXd> xs;
+	for (unsigned i = 0; i < positionDoublePtrs.size(); i++)
+		xs.push_back(computeX(*positionDoublePtrs[i], f0));
+	return xs;
+}
+
+MatrixXd RobustImageMatching::computeH(const vector<CombinationPointer>& combinationPtrs, const vector<MatrixXd*> xPtrs1, const vector<MatrixXd*> xPtrs2) throw(EigenValueException, NotConvergedException)
+{
+	double c = 0.0;
+	vector<MatrixXd> Ws;
+	for (unsigned i = 0; i < combinationPtrs.size(); i++) {
+		Ws.push_back(MatrixXd::Identity(3, 3));
+	}
+	vector<MatrixXd> V0s;
+	for (unsigned i = 0; i < combinationPtrs.size(); i++) {
+		MatrixXd V0 = MatrixXd::Identity(3, 3);
+		V0(2, 2) = 0.0;
+		const CombinationPointer& combinationPtr = combinationPtrs[i];
+		V0s.push_back(V0 / combinationPtr.getValue());
+	}
+	MatrixXd H9;
+	int loopCnt = 0;
+	while (1) {
+		MatrixXd M = computeTensorM(combinationPtrs, xPtrs1, xPtrs2, Ws);
+		MatrixXd N = computeTensorN(combinationPtrs, xPtrs1, xPtrs2, Ws, V0s);
+		MatrixXd MHat = M - c * N;
+		vector<EigenValue> eigenvalues;
+		try {
+			eigenvalues = EigenValue::solve(MHat);
+		}
+		catch (const EigenValueException& e) {
+			throw e;
+		}
+		const EigenValue& eigenvalue = eigenvalues[0];
+		double lambda9 = eigenvalue.getEigenvalue();
+		H9 = eigenvalue.getEigenvector();
+		H9 /= H9.norm();
+		if (fabs(lambda9) < RENORMALIZATION_THRESHOLD)
+			break;
+		if (++loopCnt >= RENORMALIZATION_MAXLOOP)
+			throw NotConvergedException();
+		c += lambda9 / DOT_PRODUCT(H9, N * H9);
+		MatrixXd H933(3, 3);
+		for (int i = 0; i < 3; i++)
+		for (int j = 0; j < 3; j++)
+			H933(i, j) = H9(i * 3 + j, 0);
+		for (unsigned i = 0; i < Ws.size(); i++) {
+			MatrixXd& W = Ws[i];
+			const CombinationPointer& combinationPtr = combinationPtrs[i];
+			Combination* ptr = combinationPtr.getPointer();
+			const MatrixXd& x1 = *xPtrs1[ptr->getP()];
+			const MatrixXd& x2 = *xPtrs2[ptr->getQ()];
+			const MatrixXd& V0 = V0s[i];
+			MatrixXd left = H933 * V0 * H933.transpose();
+			for (int j = 0; j < left.cols(); j++)
+				left.col(j) = CROSS_PRODUCT(x2, left.col(j));
+			for (int j = 0; j < left.cols(); j++)
+				left.col(j) = CROSS_PRODUCT(left.col(j), x2);
+			MatrixXd H933x1 = H933 * x1;
+			MatrixXd right(3, 3);
+			for (int j = 0; j < right.cols(); j++)
+				right.col(j) = CROSS_PRODUCT(H933x1, V0.col(j));
+			for (int j = 0; j < right.cols(); j++)
+				right.col(j) = CROSS_PRODUCT(right.col(j), H933x1);
+			MatrixXd m = left + right;
+			JacobiSVD<MatrixXd> svd(m, ComputeFullU | ComputeFullV);
+			MatrixXd U, S, V;
+			S = svd.singularValues();
+			U = svd.matrixU();
+			V = svd.matrixV();
+			for (int j = 0; j < S.rows() - 1; j++)
+				S(j, 0) = 1 / S(j, 0);
+			S(S.rows() - 1, 0) = 0.0;
+			W = V * S.asDiagonal() * U.transpose();
+		}
+	}
+	return H9;
+}
+
 

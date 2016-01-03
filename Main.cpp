@@ -110,6 +110,23 @@ int main(int argc, char** argv)
 
 	cout << "spatial correspondence size : " << spatialCorrespondence.size() << endl;
 
+	double f0 = 600.0;
+	vector<MatrixXd> xs1 = RobustImageMatching::computeXs(positionDoublePtrs1, f0);
+	vector<MatrixXd> xs2 = RobustImageMatching::computeXs(positionDoublePtrs2, f0);
+	vector<MatrixXd*> xPtrs1 = MatrixConverter::convert2MatrixPointer(xs1);
+	vector<MatrixXd*> xPtrs2 = MatrixConverter::convert2MatrixPointer(xs2);
+
+	MatrixXd H;
+	try {
+		H = RobustImageMatching::computeH(spatialCorrespondence, xPtrs1, xPtrs2);
+	}
+	catch (const EigenValueException& e) {
+		return 5;
+	}
+	catch (const NotConvergedException& e) {
+		return 6;
+	}
+
 	cout << "終了 : " << timer.get() << " sec" << endl;
 
 	return 0;

@@ -4,6 +4,7 @@
 class NotConvergedException { };
 class InvalidDataNumException { };
 class InvalidDeterminantException { };
+class EigenValueException { };
 
 #endif
 
