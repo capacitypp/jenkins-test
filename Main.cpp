@@ -58,6 +58,12 @@ int main(int argc, char** argv)
 	positionPtrs1 = RobustImageMatching::removeProtrudingPositions(positionPtrs1, w, gray1.cols(), gray1.rows());
 	positionPtrs2 = RobustImageMatching::removeProtrudingPositions(positionPtrs2, w, gray2.cols(), gray2.rows());
 
+	vector<MatrixXd> positionDoubles1 = MatrixConverter::convert2MatrixXd(positionPtrs1);
+	vector<MatrixXd> positionDoubles2 = MatrixConverter::convert2MatrixXd(positionPtrs2);
+	vector<MatrixXd*> positionDoublePtrs1 = MatrixConverter::convert2MatrixPointer(positionDoubles1);
+	vector<MatrixXd*> positionDoublePtrs2 = MatrixConverter::convert2MatrixPointer(positionDoubles2);
+
+
 	cout << "positions1 size : " << positionPtrs1.size() << endl;
 	cout << "positions2 size : " << positionPtrs2.size() << endl;
 
@@ -71,10 +77,38 @@ int main(int argc, char** argv)
 
 	vector<double> Js = RobustImageMatching::computeJs(combinationPtrs, Tps, Tqs);
 
-	RobustImageMatching::setJs(combinationPtrs, Js);
+	int L = (positionPtrs1.size() < positionPtrs2.size()) ? positionPtrs1.size() : positionPtrs2.size();
+	double JBar = RobustImageMatching::computeJBar(Js, L);
 
-	vector<MatrixXd> positionDoubles1 = MatrixConverter::convert2MatrixXd(positionPtrs1);
-	vector<MatrixXd> positionDoubles2 = MatrixConverter::convert2MatrixXd(positionPtrs2);
+	double s;
+	try {
+		s = RobustImageMatching::solvePhi(Js, JBar);
+	}
+	catch (const NotConvergedException& e) {
+		return 2;
+	}
+
+	vector<double> P0s = RobustImageMatching::computeP0s(Js, s);
+
+	double k = 3.0;
+	vector<CombinationPointer> localCorrespondence = RobustImageMatching::getLocalCorrespondence(combinationPtrs, P0s, k);
+
+	cout << "local correspondence size : " << localCorrespondence.size() << endl;
+
+	vector<double> P1s;
+	try {
+		P1s = RobustImageMatching::computeP1s(combinationPtrs, localCorrespondence, positionDoublePtrs1, positionDoublePtrs2);
+	}
+	catch (const InvalidDataNumException& e) {
+		return 3;
+	}
+	catch (const InvalidDeterminantException& e) {
+		return 4;
+	}
+
+	vector<CombinationPointer> spatialCorrespondence = RobustImageMatching::getSpatialCorrespondence(combinationPtrs, P0s, P1s, k);
+
+	cout << "spatial correspondence size : " << spatialCorrespondence.size() << endl;
 
 	cout << "終了 : " << timer.get() << " sec" << endl;
 
