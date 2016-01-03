@@ -38,6 +38,8 @@ public:
 	static std::vector<CombinationPointer> getSpatialCorrespondence(const std::vector<CombinationPointer>& srcCombinationPtrs, const std::vector<double>& P0s, const std::vector<double>& P1s, double k);
 	static std::vector<Eigen::MatrixXd> computeXs(const std::vector<Eigen::MatrixXd*>& positionDoublePtrs, double f0);
 	static Eigen::MatrixXd computeH(const std::vector<CombinationPointer>& combinationPtrs, const std::vector<Eigen::MatrixXd*> xPtrs1, const std::vector<Eigen::MatrixXd*> xPtrs2) throw(EigenValueException, NotConvergedException);
+	static std::vector<double> computeDs(const std::vector<CombinationPointer>& combinationPtrs, const std::vector<Eigen::MatrixXd*>& xPtrs1, const std::vector<Eigen::MatrixXd*>& xPtrs2, const Eigen::MatrixXd& H);
+	static std::vector<CombinationPointer> getGlobalCorrespondence(const std::vector<CombinationPointer>& srcCombinationPtrs, const std::vector<double>& P0s, const std::vector<double>& P1s, const std::vector<double>& P2s, double k);
 };
 
 #endif

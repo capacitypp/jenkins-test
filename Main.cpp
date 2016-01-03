@@ -127,6 +127,23 @@ int main(int argc, char** argv)
 		return 6;
 	}
 
+	vector<double> Ds = RobustImageMatching::computeDs(combinationPtrs, xPtrs1, xPtrs2, H);
+
+	double DBar = RobustImageMatching::computeJBar(Ds, L);
+
+	try {
+		s = RobustImageMatching::solvePhi(Ds, DBar);
+	}
+	catch (const NotConvergedException& e) {
+		return 7;
+	}
+
+	vector<double> P2s = RobustImageMatching::computeP0s(Ds, s);
+
+	vector<CombinationPointer> globalCorrespondence = RobustImageMatching::getGlobalCorrespondence(combinationPtrs, P0s, P1s, P2s, k);
+
+	cout << "global correspondence size : " << globalCorrespondence.size() << endl;
+
 	cout << "終了 : " << timer.get() << " sec" << endl;
 
 	return 0;

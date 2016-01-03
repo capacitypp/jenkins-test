@@ -417,7 +417,7 @@ MatrixXd RobustImageMatching::computeH(const vector<CombinationPointer>& combina
 		const CombinationPointer& combinationPtr = combinationPtrs[i];
 		V0s.push_back(V0 / combinationPtr.getValue());
 	}
-	MatrixXd H9;
+	MatrixXd H933(3, 3);
 	int loopCnt = 0;
 	while (1) {
 		MatrixXd M = computeTensorM(combinationPtrs, xPtrs1, xPtrs2, Ws);
@@ -432,17 +432,16 @@ MatrixXd RobustImageMatching::computeH(const vector<CombinationPointer>& combina
 		}
 		const EigenValue& eigenvalue = eigenvalues[0];
 		double lambda9 = eigenvalue.getEigenvalue();
-		H9 = eigenvalue.getEigenvector();
+		MatrixXd H9 = eigenvalue.getEigenvector();
 		H9 /= H9.norm();
+		for (int i = 0; i < 3; i++)
+		for (int j = 0; j < 3; j++)
+			H933(i, j) = H9(i * 3 + j, 0);
 		if (fabs(lambda9) < RENORMALIZATION_THRESHOLD)
 			break;
 		if (++loopCnt >= RENORMALIZATION_MAXLOOP)
 			throw NotConvergedException();
 		c += lambda9 / DOT_PRODUCT(H9, N * H9);
-		MatrixXd H933(3, 3);
-		for (int i = 0; i < 3; i++)
-		for (int j = 0; j < 3; j++)
-			H933(i, j) = H9(i * 3 + j, 0);
 		for (unsigned i = 0; i < Ws.size(); i++) {
 			MatrixXd& W = Ws[i];
 			const CombinationPointer& combinationPtr = combinationPtrs[i];
@@ -473,7 +472,33 @@ MatrixXd RobustImageMatching::computeH(const vector<CombinationPointer>& combina
 			W = V * S.asDiagonal() * U.transpose();
 		}
 	}
-	return H9;
+	return H933;
 }
 
+vector<double> RobustImageMatching::computeDs(const vector<CombinationPointer>& combinationPtrs, const vector<MatrixXd*>& xPtrs1, const vector<MatrixXd*>& xPtrs2, const MatrixXd& H)
+{
+	vector<double> Ds;
+	for (unsigned i = 0; i < combinationPtrs.size(); i++) {
+		const CombinationPointer& combinationPtr = combinationPtrs[i];
+		Combination* ptr = combinationPtr.getPointer();
+		const MatrixXd& x1 = *xPtrs1[ptr->getP()];
+		const MatrixXd& x2 = *xPtrs2[ptr->getQ()];
+		MatrixXd Hx1 = H * x1;
+		Hx1 /= Hx1(2, 0);
+		double tmp = (x2 - Hx1).norm();
+		Ds.push_back(tmp * tmp);
+	}
+	return Ds;
+}
+
+vector<CombinationPointer> RobustImageMatching::getGlobalCorrespondence(const vector<CombinationPointer>& srcCombinationPtrs, const vector<double>& P0s, const vector<double>& P1s, const vector<double>& P2s, double k)
+{
+	vector<CombinationPointer> combinationPtrs(srcCombinationPtrs);
+	vector<double> P0P1P2s;
+	for (unsigned i = 0; i < P0s.size(); i++)
+		P0P1P2s.push_back(P0s[i] * P1s[i] * P2s[i]);
+	setJs(combinationPtrs, P0P1P2s);
+	combinationPtrs = takeOutCombinations(combinationPtrs, exp(-3 * k * k / 2));
+	return one2OneReduction(combinationPtrs);
+}
 
