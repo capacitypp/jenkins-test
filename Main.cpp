@@ -17,8 +17,8 @@ using namespace Eigen;
 
 int main(int argc, char** argv)
 {
-	if (argc != 5) {
-		cerr << argv[0] << " <image path 1> <image path 2> <positions path 1> <positions path 2>" << endl;
+	if (argc < 5) {
+		cerr << argv[0] << " <image path 1> <image path 2> <positions path 1> <positions path 2> [w=9] [k=3] [d=3] [f0=600]" << endl;
 		return 1;
 	}
 
@@ -53,7 +53,10 @@ int main(int argc, char** argv)
 	cout << "positions1 size : " << positionPtrs1.size() << endl;
 	cout << "positions2 size : " << positionPtrs2.size() << endl;
 
-	int w = 21;
+	int w = 9;
+	if (argc >= 6)
+		w = stoi(argv[5]);
+	cout << "w : " << w << endl;
 
 	cout << "remove protruding positions" << endl;
 	positionPtrs1 = RobustImageMatching::removeProtrudingPositions(positionPtrs1, w, gray1.cols(), gray1.rows());
@@ -92,6 +95,10 @@ int main(int argc, char** argv)
 	vector<double> P0s = RobustImageMatching::computeP0s(Js, s);
 
 	double k = 3.0;
+	if (argc >= 7)
+		k = stod(argv[6]);
+	cout << "k : " << k << endl;
+
 	vector<CombinationPointer> localCorrespondence = RobustImageMatching::getLocalCorrespondence(combinationPtrs, P0s, k);
 
 	cout << "local correspondence size : " << localCorrespondence.size() << endl;
@@ -112,6 +119,10 @@ int main(int argc, char** argv)
 	cout << "spatial correspondence size : " << spatialCorrespondence.size() << endl;
 
 	double f0 = 600.0;
+	if (argc >= 9)
+		f0 = stod(argv[8]);
+	cout << "f0 : " << f0 << endl;
+
 	vector<MatrixXd> xs1 = RobustImageMatching::computeXs(positionDoublePtrs1, f0);
 	vector<MatrixXd> xs2 = RobustImageMatching::computeXs(positionDoublePtrs2, f0);
 	vector<MatrixXd*> xPtrs1 = MatrixConverter::convert2MatrixPointer(xs1);
@@ -146,6 +157,10 @@ int main(int argc, char** argv)
 	cout << "global correspondence size : " << globalCorrespondence.size() << endl;
 
 	double d = 3.0;
+	if (argc >= 8)
+		d = stod(argv[7]);
+	cout << "d : " << d << endl;
+
 	vector<CombinationPointer> ransacCorrespondence;
 	try {
 		ransacCorrespondence = RobustImageMatching::getRansacCorrespondence(combinationPtrs, globalCorrespondence, xPtrs1, xPtrs2, P0s, P1s, P2s, k, d, f0);
