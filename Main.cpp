@@ -9,6 +9,7 @@
 #include "RobustImageMatching.h"
 #include "Combination.h"
 #include "Timer.h"
+#include "CvUtil.h"
 
 using namespace std;
 using namespace cv;
@@ -52,7 +53,7 @@ int main(int argc, char** argv)
 	cout << "positions1 size : " << positionPtrs1.size() << endl;
 	cout << "positions2 size : " << positionPtrs2.size() << endl;
 
-	int w = 9;
+	int w = 21;
 
 	cout << "remove protruding positions" << endl;
 	positionPtrs1 = RobustImageMatching::removeProtrudingPositions(positionPtrs1, w, gray1.cols(), gray1.rows());
@@ -145,6 +146,15 @@ int main(int argc, char** argv)
 	cout << "global correspondence size : " << globalCorrespondence.size() << endl;
 
 	cout << "終了 : " << timer.get() << " sec" << endl;
+
+	/*
+	Mat image = CvUtil::drawCorrespondence(image1, image2, globalCorrespondence, positionPtrs1, positionPtrs2);
+	image = CvUtil::resize(image, 0.5);
+
+	namedWindow("a");
+	imshow("a", image);
+	waitKey();
+	*/
 
 	return 0;
 }
