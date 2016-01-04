@@ -7,9 +7,9 @@
 #include "EigenValue.h"
 
 #define NEWTON_THRESHOLD	1.0e-10
-#define NEWTON_MAXLOOP	1000
+#define NEWTON_MAXLOOP	100
 #define RENORMALIZATION_THRESHOLD	1.0e-10
-#define RENORMALIZATION_MAXLOOP	1000
+#define RENORMALIZATION_MAXLOOP	100
 
 using namespace std;
 using namespace Eigen;
