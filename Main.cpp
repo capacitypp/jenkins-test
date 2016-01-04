@@ -145,17 +145,26 @@ int main(int argc, char** argv)
 
 	cout << "global correspondence size : " << globalCorrespondence.size() << endl;
 
-	cout << "終了 : " << timer.get() << " sec" << endl;
+	double d = 3.0;
+	vector<CombinationPointer> ransacCorrespondence;
+	try {
+		ransacCorrespondence = RobustImageMatching::getRansacCorrespondence(combinationPtrs, globalCorrespondence, xPtrs1, xPtrs2, P0s, P1s, P2s, k, d, f0);
+	}
+	catch (const InvalidDataNumException& e) {
+		return 8;
+	}
 
+	cout << "ransac correspondence size : " << ransacCorrespondence.size() << endl;
+
+	cout << "終了 : " << timer.get() << " sec" << endl;
 	/*
-	Mat image = CvUtil::drawCorrespondence(image1, image2, globalCorrespondence, positionPtrs1, positionPtrs2);
+	Mat image = CvUtil::drawCorrespondence(image1, image2, ransacCorrespondence, positionPtrs1, positionPtrs2);
 	image = CvUtil::resize(image, 0.5);
 
 	namedWindow("a");
 	imshow("a", image);
 	waitKey();
 	*/
-
 	return 0;
 }
 

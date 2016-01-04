@@ -22,6 +22,12 @@ class RobustImageMatching {
 	static Eigen::MatrixXd tensorProduct(const Eigen::MatrixXd& a, const Eigen::MatrixXd& b);
 	static int epsilon(int i, int j, int k);
 	static Eigen::MatrixXd computeTensorN(const std::vector<CombinationPointer>& combinationPtrs, const std::vector<Eigen::MatrixXd*>& xPtrs1, const std::vector<Eigen::MatrixXd*>& xPtrs2, const std::vector<Eigen::MatrixXd>& Ws, const std::vector<Eigen::MatrixXd>& V0s);
+	static Eigen::MatrixXd getEpipolarMatrix(const Eigen::MatrixXd& x1, const Eigen::MatrixXd& x2);
+	static std::vector<Eigen::MatrixXd> getEpipolarMatrixs(const std::vector<CombinationPointer>& combinationPtrs, const std::vector<Eigen::MatrixXd*>& xPtrs1, const std::vector<Eigen::MatrixXd*>& xPtrs2);
+	static std::vector<int> getRandomIndexes(int max, int n);
+	static Eigen::MatrixXd solveF(const std::vector<Eigen::MatrixXd>& epipolarMatrixs, const std::vector<int>& indexes);
+	static std::vector<double> computeDFs(const std::vector<CombinationPointer>& combinationPtrs, const std::vector<Eigen::MatrixXd*>& xPtrs1, const std::vector<Eigen::MatrixXd*>& xPtrs2, const Eigen::MatrixXd& F);
+	static std::vector<CombinationPointer> takeOutCombinations(const std::vector<CombinationPointer>& combinationPtrs, const std::vector<double>& DFs, double threshold);
 public:
 	static std::vector<Eigen::MatrixXi*> removeDuplicatePositions(const std::vector<Eigen::MatrixXi*>& positionPtrs);
 	static std::vector<Eigen::MatrixXi*> removeProtrudingPositions(const std::vector<Eigen::MatrixXi*>& positionPtrs, int w, int width, int height);
@@ -40,6 +46,7 @@ public:
 	static Eigen::MatrixXd computeH(const std::vector<CombinationPointer>& combinationPtrs, const std::vector<Eigen::MatrixXd*> xPtrs1, const std::vector<Eigen::MatrixXd*> xPtrs2) throw(EigenValueException, NotConvergedException);
 	static std::vector<double> computeDs(const std::vector<CombinationPointer>& combinationPtrs, const std::vector<Eigen::MatrixXd*>& xPtrs1, const std::vector<Eigen::MatrixXd*>& xPtrs2, const Eigen::MatrixXd& H);
 	static std::vector<CombinationPointer> getGlobalCorrespondence(const std::vector<CombinationPointer>& srcCombinationPtrs, const std::vector<double>& P0s, const std::vector<double>& P1s, const std::vector<double>& P2s, double k);
+	static std::vector<CombinationPointer> getRansacCorrespondence(const std::vector<CombinationPointer>& srcCombinationPtrs, const std::vector<CombinationPointer>& globalCorrespondence, const std::vector<Eigen::MatrixXd*>& xPtrs1, const std::vector<Eigen::MatrixXd*>& xPtrs2, const std::vector<double>& P0s, const std::vector<double>& P1s, const std::vector<double>& P2s, double k, double d, double f0) throw(InvalidDataNumException);
 };
 
 #endif

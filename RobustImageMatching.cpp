@@ -1,4 +1,5 @@
 #include <iostream>
+#include <random>
 
 #include <Eigen/Dense>
 
@@ -202,6 +203,106 @@ MatrixXd RobustImageMatching::computeTensorN(const vector<CombinationPointer>& c
 	}
 	N /= combinationPtrs.size();
 	return N;
+}
+
+MatrixXd RobustImageMatching::getEpipolarMatrix(const MatrixXd& x1, const MatrixXd& x2)
+{
+	MatrixXd epipolarMatrix(1, 8);
+	epipolarMatrix(0, 0) = x1(0, 0) * x2(0, 0);
+	epipolarMatrix(0, 1) = x1(0, 0) * x2(1, 0);
+	epipolarMatrix(0, 2) = x1(0, 0);
+	epipolarMatrix(0, 3) = x1(1, 0) * x2(0, 0);
+	epipolarMatrix(0, 4) = x1(1, 0) * x2(1, 0);
+	epipolarMatrix(0, 5) = x1(1, 0);
+	epipolarMatrix(0, 6) = x2(0, 0);
+	epipolarMatrix(0, 7) = x2(1, 0);
+	return epipolarMatrix;
+}
+
+vector<MatrixXd> RobustImageMatching::getEpipolarMatrixs(const vector<CombinationPointer>& combinationPtrs, const vector<MatrixXd*>& xPtrs1, const vector<MatrixXd*>& xPtrs2)
+{
+	vector<MatrixXd> epipolarMatrixs;
+	for (unsigned i = 0; i < combinationPtrs.size(); i++) {
+		const CombinationPointer& combinationPtr = combinationPtrs[i];
+		Combination* ptr = combinationPtr.getPointer();
+		const MatrixXd& x1 = *xPtrs1[ptr->getP()];
+		const MatrixXd& x2 = *xPtrs2[ptr->getQ()];
+		epipolarMatrixs.push_back(getEpipolarMatrix(x1, x2));
+	}
+	return epipolarMatrixs;
+}
+
+vector<int> RobustImageMatching::getRandomIndexes(int max, int n)
+{
+	static random_device rnd;
+	static mt19937 mt(rnd());
+	uniform_int_distribution<int> rand1max(1, max);
+	vector<int> indexes;
+	while (n-- > 0) {
+		int index = rand1max(mt) - 1;
+		bool flag = false;
+		for (unsigned i = 0; i < indexes.size(); i++) {
+			if (indexes[i] == index) {
+				flag = true;
+				break;
+			}
+		}
+		if (flag) {
+			n++;
+			continue;
+		}
+		indexes.push_back(index);
+	}
+	return indexes;
+}
+
+MatrixXd RobustImageMatching::solveF(const vector<MatrixXd>& epipolarMatrixs, const vector<int>& indexes)
+{
+	MatrixXd epipolarMatrix(8, 8);
+	for (int i = 0; i < epipolarMatrix.rows(); i++)
+		epipolarMatrix.row(i) = epipolarMatrixs[indexes[i]];
+	MatrixXd b(8, 1);
+	for (int i = 0; i < b.rows(); i++)
+		b(i, 0) = 1.0;
+	MatrixXd x = epipolarMatrix.fullPivLu().solve(-b);
+	MatrixXd F(3, 3);
+	for (int i = 0; i < x.rows(); i++)
+		F(i / F.cols(), i % F.cols()) = x(i);
+	F(2, 2) = 1.0;
+	F /= F.norm();
+	return F;
+}
+
+vector<double> RobustImageMatching::computeDFs(const vector<CombinationPointer>& combinationPtrs, const vector<MatrixXd*>& xPtrs1, const vector<MatrixXd*>& xPtrs2, const MatrixXd& F)
+{
+	MatrixXd P = MatrixXd::Identity(3, 3);
+	P(2, 2) = 0.0;
+	vector<double> DFs;
+	for (unsigned i = 0; i < combinationPtrs.size(); i++) {
+		const CombinationPointer& combinationPtr = combinationPtrs[i];
+		Combination* ptr = combinationPtr.getPointer();
+		const MatrixXd& x1 = *xPtrs1[ptr->getP()];
+		const MatrixXd& x2 = *xPtrs2[ptr->getQ()];
+		double xFxDash = DOT_PRODUCT(x1, F * x2);
+		double xFxDash2 = xFxDash * xFxDash;
+		double PFtx = (P * F.transpose() * x1).norm();
+		double PFtx2 = PFtx * PFtx;
+		double PFxDash = (P * F * x2).norm();
+		double PFxDash2 = PFxDash * PFxDash;
+		double DF = xFxDash2 / (PFtx2 + PFxDash2);
+		DFs.push_back(DF);
+	}
+	return DFs;
+}
+
+vector<CombinationPointer> RobustImageMatching::takeOutCombinations(const vector<CombinationPointer>& combinationPtrs, const vector<double>& DFs, double threshold)
+{
+	vector<CombinationPointer> dst;
+	for (unsigned i = 0; i < combinationPtrs.size(); i++) {
+		if (DFs[i] <= threshold)
+			dst.push_back(combinationPtrs[i]);
+	}
+	return dst;
 }
 
 int RobustImageMatching::epsilon(int i, int j, int k)
@@ -500,5 +601,42 @@ vector<CombinationPointer> RobustImageMatching::getGlobalCorrespondence(const ve
 	setJs(combinationPtrs, P0P1P2s);
 	combinationPtrs = takeOutCombinations(combinationPtrs, exp(-3 * k * k / 2));
 	return one2OneReduction(combinationPtrs);
+}
+
+vector<CombinationPointer> RobustImageMatching::getRansacCorrespondence(const vector<CombinationPointer>& srcCombinationPtrs, const vector<CombinationPointer>& globalCorrespondence, const vector<MatrixXd*>& xPtrs1, const vector<MatrixXd*>& xPtrs2, const vector<double>& P0s, const vector<double>& P1s, const vector<double>& P2s, double k, double d, double f0) throw(InvalidDataNumException)
+{
+	unsigned n2 = globalCorrespondence.size();
+	if (n2 < 8)
+		throw InvalidDataNumException();
+	vector<MatrixXd> epipolarMatrixs = getEpipolarMatrixs(globalCorrespondence, xPtrs1, xPtrs2);
+	double threshold = 2 * d * d / (f0 * f0);
+	double Sm = 0.0;
+	MatrixXd Fm = MatrixXd::Zero(3, 3);
+	int loopCnt = 0;
+	while (1) {
+		vector<int> indexes = getRandomIndexes(n2, 8);
+		MatrixXd F = solveF(epipolarMatrixs, indexes);
+		vector<double> DFs = computeDFs(globalCorrespondence, xPtrs1, xPtrs2, F);
+		vector<CombinationPointer> tmpCombinationPtrs = takeOutCombinations(globalCorrespondence, DFs, threshold);
+		double S = 0.0;
+		for (unsigned i = 0; i < tmpCombinationPtrs.size(); i++)
+			S += tmpCombinationPtrs[i].getValue();
+		if (S > Sm) {
+			Sm = S;
+			Fm = F;
+			loopCnt = 0;
+		}
+		if (++loopCnt > 100)
+			break;
+	}
+	vector<CombinationPointer> combinationPtrs(srcCombinationPtrs);
+	vector<double> DFs = computeDFs(combinationPtrs, xPtrs1, xPtrs2, Fm);
+	vector<double> P0P1P2s;
+	for (unsigned i = 0; i < P0s.size(); i++)
+		P0P1P2s.push_back(P0s[i] * P1s[i] * P2s[i]);
+	setJs(combinationPtrs, P0P1P2s);
+	vector<CombinationPointer> tmpCombinationPtrs = takeOutCombinations(combinationPtrs, DFs, threshold);
+	tmpCombinationPtrs = takeOutCombinations(tmpCombinationPtrs, exp(-3 * k * k / 2));
+	return one2OneReduction(tmpCombinationPtrs);
 }
 
