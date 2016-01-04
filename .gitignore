@@ -1,4 +1,5 @@
 *.o
 RobustImageMatching
 data/robustMatches.dat
+data/robustMatches.jpg
 

@@ -188,14 +188,10 @@ int main(int argc, char** argv)
 	CombinationPointer::write("data/robustMatches.dat", ransacCorrespondence, positionPtrs1, positionPtrs2);
 
 	cout << "終了 : " << timer.get() << " sec" << endl;
-	/*
-	Mat image = CvUtil::drawCorrespondence(image1, image2, ransacCorrespondence, positionPtrs1, positionPtrs2);
-	image = CvUtil::resize(image, 0.5);
 
-	namedWindow("a");
-	imshow("a", image);
-	waitKey();
-	*/
+	Mat image = CvUtil::drawCorrespondence(image1, image2, ransacCorrespondence, positionPtrs1, positionPtrs2);
+	imwrite("data/robustMatches.jpg", image);
+
 	return 0;
 }
 
