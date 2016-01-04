@@ -2,6 +2,9 @@
 #define ___Class_Combination
 
 #include <vector>
+#include <string>
+
+#include <Eigen/Core>
 
 class Combination {
 	int p, q;
@@ -30,6 +33,7 @@ public:
 	friend bool operator<(const CombinationPointer& x1, const CombinationPointer& x2) {
 		return x1.value < x2.value;
 	}
+	static void write(const std::string& fpath, const std::vector<CombinationPointer>& combinationPtrs, const std::vector<Eigen::MatrixXi*>& positionPtrs1, const std::vector<Eigen::MatrixXi*>& positionPtrs2);
 };
 
 #endif
