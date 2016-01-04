@@ -79,11 +79,16 @@ int main(int argc, char** argv)
 
 	cout << "combinations size : " << combinations.size() << endl;
 
+	Timer timer1;
+	cout << "compute Js..." << flush;
 	vector<double> Js = RobustImageMatching::computeJs(combinationPtrs, Tps, Tqs);
+	cout << "done(" << timer1.get() << ")." << endl;
 
 	int L = (positionPtrs1.size() < positionPtrs2.size()) ? positionPtrs1.size() : positionPtrs2.size();
 	double JBar = RobustImageMatching::computeJBar(Js, L);
 
+	timer1.get();
+	cout << "solve phi..." << flush;
 	double s;
 	try {
 		s = RobustImageMatching::solvePhi(Js, JBar);
@@ -91,6 +96,7 @@ int main(int argc, char** argv)
 	catch (const NotConvergedException& e) {
 		return 2;
 	}
+	cout << "done(" << timer1.get() << ")." << endl;
 
 	vector<double> P0s = RobustImageMatching::computeP0s(Js, s);
 
@@ -128,6 +134,8 @@ int main(int argc, char** argv)
 	vector<MatrixXd*> xPtrs1 = MatrixConverter::convert2MatrixPointer(xs1);
 	vector<MatrixXd*> xPtrs2 = MatrixConverter::convert2MatrixPointer(xs2);
 
+	timer1.get();
+	cout << "compute H..." << flush;
 	MatrixXd H;
 	try {
 		H = RobustImageMatching::computeH(spatialCorrespondence, xPtrs1, xPtrs2);
@@ -138,17 +146,21 @@ int main(int argc, char** argv)
 	catch (const NotConvergedException& e) {
 		return 6;
 	}
+	cout << "done(" << timer1.get() << ")." << endl;
 
 	vector<double> Ds = RobustImageMatching::computeDs(combinationPtrs, xPtrs1, xPtrs2, H);
 
 	double DBar = RobustImageMatching::computeJBar(Ds, L);
 
+	timer1.get();
+	cout << "solve phi..." << flush;
 	try {
 		s = RobustImageMatching::solvePhi(Ds, DBar);
 	}
 	catch (const NotConvergedException& e) {
 		return 7;
 	}
+	cout << "done(" << timer1.get() << ")." << endl;
 
 	vector<double> P2s = RobustImageMatching::computeP0s(Ds, s);
 
@@ -161,6 +173,7 @@ int main(int argc, char** argv)
 		d = stod(argv[7]);
 	cout << "d : " << d << endl;
 
+	cout << "get ransac correspondence..." << flush;
 	vector<CombinationPointer> ransacCorrespondence;
 	try {
 		ransacCorrespondence = RobustImageMatching::getRansacCorrespondence(combinationPtrs, globalCorrespondence, xPtrs1, xPtrs2, P0s, P1s, P2s, k, d, f0);
@@ -168,6 +181,7 @@ int main(int argc, char** argv)
 	catch (const InvalidDataNumException& e) {
 		return 8;
 	}
+	cout << "done(" << timer1.get() << ")." << endl;
 
 	cout << "ransac correspondence size : " << ransacCorrespondence.size() << endl;
 
