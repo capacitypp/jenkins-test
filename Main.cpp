@@ -109,6 +109,8 @@ int main(int argc, char** argv)
 
 	cout << "local correspondence size : " << localCorrespondence.size() << endl;
 
+	timer1.get();
+	cout << "compute P1s..." << flush;
 	vector<double> P1s;
 	try {
 		P1s = RobustImageMatching::computeP1s(combinationPtrs, localCorrespondence, positionDoublePtrs1, positionDoublePtrs2);
@@ -119,6 +121,7 @@ int main(int argc, char** argv)
 	catch (const InvalidDeterminantException& e) {
 		return 4;
 	}
+	cout << "done(" << timer1.get() << ")." << endl;
 
 	vector<CombinationPointer> spatialCorrespondence = RobustImageMatching::getSpatialCorrespondence(combinationPtrs, P0s, P1s, k);
 

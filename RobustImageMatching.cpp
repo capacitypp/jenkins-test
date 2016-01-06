@@ -485,11 +485,14 @@ vector<double> RobustImageMatching::computeP1s(const vector<CombinationPointer>&
 	vector<MatrixXd> rLambdas = computeFlow(combinationPtrs, positionDoublePtrs1, positionDoublePtrs2);
 
 	vector<double> P1s;
+	P1s.resize(combinationPtrs.size());
+
+	#pragma omp parallel for
 	for (unsigned i = 0; i < combinationPtrs.size(); i++) {
 		const CombinationPointer& combinationPtr = combinationPtrs[i];
 		const MatrixXd& rLambda = rLambdas[i];
 		MatrixXd rLambdarm = rLambda - rm;
-		P1s.push_back(exp(-DOT_PRODUCT(rLambdarm, VInverse * rLambdarm)));
+		P1s[i] = exp(-DOT_PRODUCT(rLambdarm, VInverse * rLambdarm));
 	}
 
 	return P1s;
