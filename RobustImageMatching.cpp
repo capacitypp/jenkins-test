@@ -89,6 +89,9 @@ void RobustImageMatching::evaluatePhiAndDiffPhi(const vector<double>& JsJBar, co
 vector<MatrixXd> RobustImageMatching::computeFlow(const vector<CombinationPointer>& combinationPtrs, const vector<MatrixXd*>& positionDoublePtrs1, const vector<MatrixXd*>& positionDoublePtrs2)
 {
 	vector<MatrixXd> rs;
+	rs.resize(combinationPtrs.size());
+
+	#pragma omp parallel for
 	for (unsigned i = 0; i < combinationPtrs.size(); i++) {
 		const CombinationPointer& combinationPtr = combinationPtrs[i];
 		Combination* ptr = combinationPtr.getPointer();
@@ -96,7 +99,7 @@ vector<MatrixXd> RobustImageMatching::computeFlow(const vector<CombinationPointe
 		int q = ptr->getQ();
 		const MatrixXd& positionDouble1 = *positionDoublePtrs1[p];
 		const MatrixXd& positionDouble2 = *positionDoublePtrs2[q];
-		rs.push_back(positionDouble2 - positionDouble1);
+		rs[i] = positionDouble2 - positionDouble1;
 	}
 	return rs;
 }
