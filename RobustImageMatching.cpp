@@ -52,8 +52,11 @@ MatrixXd RobustImageMatching::computeT(const MatrixXd& gray, const MatrixXi& pos
 
 double RobustImageMatching::computeJ(const MatrixXd& Tp, const MatrixXd& Tq)
 {
+	/*
 	double norm = (Tp - Tq).norm();
 	return norm * norm;
+	*/
+	return (Tp - Tq).squaredNorm();
 }
 
 bool RobustImageMatching::searchCombination(const vector<CombinationPointer>& combinationPtrs, const CombinationPointer& combinationPtr)
