@@ -6,6 +6,7 @@
 #include "RobustImageMatching.h"
 #include "MatrixUtil.h"
 #include "EigenValue.h"
+#include "Timer.h"
 
 #define NEWTON_THRESHOLD	1.0e-10
 #define NEWTON_MAXLOOP	100
@@ -281,6 +282,9 @@ vector<double> RobustImageMatching::computeDFs(const vector<CombinationPointer>&
 	MatrixXd P = MatrixXd::Identity(3, 3);
 	P(2, 2) = 0.0;
 	vector<double> DFs;
+	DFs.resize(combinationPtrs.size());
+
+	#pragma omp parallel for
 	for (unsigned i = 0; i < combinationPtrs.size(); i++) {
 		const CombinationPointer& combinationPtr = combinationPtrs[i];
 		Combination* ptr = combinationPtr.getPointer();
@@ -293,7 +297,7 @@ vector<double> RobustImageMatching::computeDFs(const vector<CombinationPointer>&
 		double PFxDash = (P * F * x2).norm();
 		double PFxDash2 = PFxDash * PFxDash;
 		double DF = xFxDash2 / (PFtx2 + PFxDash2);
-		DFs.push_back(DF);
+		DFs[i] = DF;
 	}
 	return DFs;
 }
