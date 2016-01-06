@@ -156,7 +156,10 @@ int main(int argc, char** argv)
 	vector<double> Ds = RobustImageMatching::computeDs(combinationPtrs, xPtrs1, xPtrs2, H);
 	cout << "done(" << timer1.get() << ")." << endl;
 
+	timer1.get();
+	cout << "compute DBar..." << flush;
 	double DBar = RobustImageMatching::computeJBar(Ds, L);
+	cout << "done(" << timer1.get() << ")." << endl;
 
 	timer1.get();
 	cout << "solve phi..." << flush;
