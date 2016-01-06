@@ -595,6 +595,9 @@ MatrixXd RobustImageMatching::computeH(const vector<CombinationPointer>& combina
 vector<double> RobustImageMatching::computeDs(const vector<CombinationPointer>& combinationPtrs, const vector<MatrixXd*>& xPtrs1, const vector<MatrixXd*>& xPtrs2, const MatrixXd& H)
 {
 	vector<double> Ds;
+	Ds.resize(combinationPtrs.size());
+
+	#pragma omp parallel for
 	for (unsigned i = 0; i < combinationPtrs.size(); i++) {
 		const CombinationPointer& combinationPtr = combinationPtrs[i];
 		Combination* ptr = combinationPtr.getPointer();
@@ -602,8 +605,7 @@ vector<double> RobustImageMatching::computeDs(const vector<CombinationPointer>& 
 		const MatrixXd& x2 = *xPtrs2[ptr->getQ()];
 		MatrixXd Hx1 = H * x1;
 		Hx1 /= Hx1(2, 0);
-		double tmp = (x2 - Hx1).norm();
-		Ds.push_back(tmp * tmp);
+		Ds[i] = (x2 - Hx1).squaredNorm();
 	}
 	return Ds;
 }
