@@ -77,12 +77,22 @@ void RobustImageMatching::evaluatePhiAndDiffPhi(const vector<double>& JsJBar, co
 {
 	*phi = 0.0;
 	*diffPhi = 0.0;
-	for (unsigned i = 0; i < Js.size(); i++) {
-		double J = Js[i];
-		double JsJBare = JsJBar[i] * exp(-s * J);
-		//cout << JsJBar[i] << endl;
-		*phi += JsJBare;
-		*diffPhi += -J * JsJBare;
+	#pragma omp parallel
+	{
+		double _phi = 0.0;
+		double _diffPhi = 0.0;
+		#pragma omp for
+		for (unsigned i = 0; i < Js.size(); i++) {
+			double J = Js[i];
+			double JsJBare = JsJBar[i] * exp(-s * J);
+			//cout << JsJBar[i] << endl;
+			_phi += JsJBare;
+			_diffPhi += -J * JsJBare;
+		}
+		#pragma omp critical
+		*phi += _phi;
+		#pragma omp critical
+		*diffPhi += _diffPhi;
 	}
 }
 
