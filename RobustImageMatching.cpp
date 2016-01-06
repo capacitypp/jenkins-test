@@ -354,6 +354,9 @@ vector<MatrixXd> RobustImageMatching::computeTs(const MatrixXd& gray, const vect
 vector<double> RobustImageMatching::computeJs(const vector<CombinationPointer>& combinationPtrs, const vector<MatrixXd>& Tps, const vector<MatrixXd>& Tqs)
 {
 	vector<double> Js;
+	Js.resize(combinationPtrs.size());
+
+	#pragma omp parallel for
 	for (unsigned i = 0; i < combinationPtrs.size(); i++) {
 		const CombinationPointer& combinationPtr = combinationPtrs[i];
 		Combination* ptr = combinationPtr.getPointer();
@@ -361,7 +364,7 @@ vector<double> RobustImageMatching::computeJs(const vector<CombinationPointer>& 
 		int q = ptr->getQ();
 		const MatrixXd& Tp = Tps[p];
 		const MatrixXd& Tq = Tqs[q];
-		Js.push_back(computeJ(Tp, Tq));
+		Js[i] = computeJ(Tp, Tq);
 	}
 	return Js;
 }
