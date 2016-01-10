@@ -18,7 +18,8 @@ Mat CvUtil::drawCorrespondence(const Mat& image1, const Mat& image2, const vecto
 		Point point1(position1(0, 0), position1(1, 0));
 		Point point2(position2(0, 0), position2(1, 0));
 		Scalar color(255, 255, 255);
-		line(image, point1, point2, color, 5);
+		line(image, point1, point2, color, 2);
+		circle(image, point2, 10, color, 2);
 	}
 	return image;
 }
