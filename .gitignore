@@ -2,4 +2,7 @@
 RobustImageMatching
 robustMatches.dat
 robustMatches.jpg
+globalCorrespondence.jpg
+spatialCorrespondence.jpg
+localCorrespondence.jpg
 
