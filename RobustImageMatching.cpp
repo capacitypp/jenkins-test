@@ -668,3 +668,10 @@ vector<CombinationPointer> RobustImageMatching::getRansacCorrespondence(const ve
 	return one2OneReduction(tmpCombinationPtrs);
 }
 
+vector<CombinationPointer> RobustImageMatching::getTemplateCorrespondence(const vector<CombinationPointer>& srcCombinationPtrs, const vector<double>& Js)
+{
+	vector<CombinationPointer> combinationPtrs(srcCombinationPtrs);
+	setJs(combinationPtrs, Js);
+	return one2OneReduction(combinationPtrs);
+}
+

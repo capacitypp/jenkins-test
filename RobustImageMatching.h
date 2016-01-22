@@ -47,6 +47,7 @@ public:
 	static std::vector<double> computeDs(const std::vector<CombinationPointer>& combinationPtrs, const std::vector<Eigen::MatrixXd*>& xPtrs1, const std::vector<Eigen::MatrixXd*>& xPtrs2, const Eigen::MatrixXd& H);
 	static std::vector<CombinationPointer> getGlobalCorrespondence(const std::vector<CombinationPointer>& srcCombinationPtrs, const std::vector<double>& P0s, const std::vector<double>& P1s, const std::vector<double>& P2s, double k);
 	static std::vector<CombinationPointer> getRansacCorrespondence(const std::vector<CombinationPointer>& srcCombinationPtrs, const std::vector<CombinationPointer>& globalCorrespondence, const std::vector<Eigen::MatrixXd*>& xPtrs1, const std::vector<Eigen::MatrixXd*>& xPtrs2, const std::vector<double>& P0s, const std::vector<double>& P1s, const std::vector<double>& P2s, double k, double d, double f0) throw(InvalidDataNumException);
+	static std::vector<CombinationPointer> getTemplateCorrespondence(const std::vector<CombinationPointer>& srcCombinationPtrs, const std::vector<double>& Js);
 };
 
 #endif
